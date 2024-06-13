@@ -36,4 +36,47 @@ jobs:
           repo init -u https://android.googlesource.com/platform/manifest -b android-8.1.0_r1
           repo sync -j4
 
-      # Continue with the rest of your workflow...
+      - name: Download kernel source
+        run: |
+          cd ~/aosp
+          git clone --depth=1 https://android.googlesource.com/kernel/common kernel
+          cd kernel
+          git checkout android-3.18
+
+      - name: Configure kernel
+        run: |
+          cd ~/aosp/kernel
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- defconfig
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- menuconfig
+
+      - name: Enable virtio devices in kernel config
+        run: |
+          cd ~/aosp/kernel
+          scripts/config --enable CONFIG_VIRTIO
+          scripts/config --enable CONFIG_VIRTIO_BLK
+          scripts/config --enable CONFIG_VIRTIO_NET
+
+      - name: Build kernel
+        run: |
+          cd ~/aosp/kernel
+          make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- -j$(nproc)
+
+      - name: Set up environment
+        run: |
+          cd ~/aosp
+          source build/envsetup.sh
+          lunch aosp_arm64-userdebug
+
+      - name: Build Android
+        run: |
+          cd ~/aosp
+          make -j$(nproc)
+
+      - name: Save artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: android_build_output
+          path: |
+            ~/aosp/out/target/product/generic/*.img
+            ~/aosp/out/target/product/generic/*.zip
+            

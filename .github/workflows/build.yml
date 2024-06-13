@@ -20,10 +20,9 @@ jobs:
 
       - name: Download and install repo tool
         run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod +x ~/bin/repo
-          export PATH=~/bin:$PATH
+          sudo mkdir -p /usr/local/bin
+          sudo curl -o /usr/local/bin/repo https://storage.googleapis.com/git-repo-downloads/repo
+          sudo chmod +x /usr/local/bin/repo
 
       - name: Verify repo installation
         run: |
